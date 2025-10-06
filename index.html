@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Prediction</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <!-- Other head content -->
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: url('https://wallpaperaccess.com/full/191503.jpg') no-repeat center center fixed;
+            background-size: cover;
+            position: relative;
+        }
+    
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background:transparent; /* Adjust opacity here if needed */
+            z-index: -1;
+        }
+            .container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: center;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        select, input, button {
+            padding: 12px;
+            font-size: 16px;
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin-top: 8px;
+        }
+        select:focus, input:focus, button:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            margin-top: 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .results {
+            margin-top: 30px;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .results h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            animation: fadeIn 0.5s ease-out;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            font-size: 16px;
+            color: #333;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        td {
+            background-color: #f9f9f9;
+        }
+        .alert {
+            background-color: #ff9800;
+            color: white;
+            padding: 12px;
+            border-radius: 5px;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        canvas {
+            width: 100%;
+            height: 400px;
+            margin-top: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        .result-row {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 0.3s forwards;
+        }
+        .result-row:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+        .result-row:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .result-row:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+        .result-row:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+        .result-row:nth-child(5) {
+            animation-delay: 0.5s;
+        }
+        .result-row:nth-child(6) {
+            animation-delay: 0.6s;
+        }
+        .result-row:nth-child(7) {
+            animation-delay: 0.7s;
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Weather Prediction</h1>
+
+    <div class="form-group">
+        <label for="district">Select District:</label>
+        <select id="district">
+            <option value="">Select District</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="mandal">Select Mandal:</label>
+        <select id="mandal">
+            <option value="">Select Mandal</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="date">Select Date:</label>
+        <input type="date" id="date">
+    </div>
+
+    <button onclick="getPrediction()">Get Weather Prediction</button>
+
+    <div class="results" id="results" style="display: none;">
+        <h3>Prediction Details:</h3>
+        <table id="predictionTable">
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody id="predictionList"></tbody>
+        </table>
+    </div>
+
+    <button id="visualizationBtn" onclick="visualizeData()" style="display: none;">Visualize Weather Data</button>
+
+    <canvas id="weatherChart" style="display: none;"></canvas>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        loadDistricts();
+    });
+
+    const backendURL = 'http://127.0.0.1:5000';
+    let predictionData = null;
+
+    // Load districts
+    function loadDistricts() {
+        fetch(`${backendURL}/get_districts`)
+            .then(response => response.json())
+            .then(data => {
+                const districtSelect = document.getElementById('district');
+                data.forEach(district => {
+                    const option = document.createElement('option');
+                    option.value = district;
+                    option.textContent = district;
+                    districtSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error loading districts:', error));
+    }
+
+    // Load mandals based on selected district
+    document.getElementById('district').addEventListener('change', function () {
+        const district = this.value;
+        if (district) {
+            fetch(`${backendURL}/get_mandals`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ district: district })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const mandalSelect = document.getElementById('mandal');
+                mandalSelect.innerHTML = '<option value="">Select Mandal</option>';
+                data.forEach(mandal => {
+                    const option = document.createElement('option');
+                    option.value = mandal;
+                    option.textContent = mandal;
+                    mandalSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error loading mandals:', error));
+        }
+    });
+
+    // Get prediction
+    function getPrediction() {
+        const district = document.getElementById('district').value;
+        const mandal = document.getElementById('mandal').value;
+        const date = document.getElementById('date').value;
+
+        if (!district || !mandal || !date) {
+            alert("Please fill all fields before predicting.");
+            return;
+        }
+
+        fetch(`${backendURL}/predict`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ district, mandal, date })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('results').innerHTML = `<div class="alert">${data.error}</div>`;
+                document.getElementById('visualizationBtn').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+            } else {
+                predictionData = data;
+                const resultsHTML = `
+                    <tr class="result-row"><td>Rainfall</td><td>${data.rainfall} mm</td></tr>
+                    <tr class="result-row"><td>Min Temp</td><td>${data.temp_min} °C</td></tr>
+                    <tr class="result-row"><td>Max Temp</td><td>${data.temp_max} °C</td></tr>
+                    <tr class="result-row"><td>Min Humidity</td><td>${data.humidity_min} %</td></tr>
+                    <tr class="result-row"><td>Max Humidity</td><td>${data.humidity_max} %</td></tr>
+                    <tr class="result-row"><td>Min Wind Speed</td><td>${data.wind_speed_min} km/h</td></tr>
+                    <tr class="result-row"><td>Max Wind Speed</td><td>${data.wind_speed_max} km/h</td></tr>
+                `;
+                document.getElementById('predictionList').innerHTML = resultsHTML;
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('visualizationBtn').style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Prediction error:', error);
+            document.getElementById('results').innerHTML = `<div class="alert">Error fetching prediction</div>`;
+            document.getElementById('visualizationBtn').style.display = 'none';
+        });
+    }
+
+    // Visualization
+    function visualizeData() {
+        if (!predictionData) {
+            alert('No prediction data available!');
+            return;
+        }
+
+        const rainfall = predictionData.rainfall || 0;
+        const minTemp = predictionData.temp_min || 0;
+        const maxTemp = predictionData.temp_max || 0;
+        const minHumidity = predictionData.humidity_min || 0;
+        const maxHumidity = predictionData.humidity_max || 0;
+        const minWindSpeed = predictionData.wind_speed_min || 0;
+        const maxWindSpeed = predictionData.wind_speed_max || 0;
+
+        const ctx = document.getElementById('weatherChart').getContext('2d');
+        document.getElementById('weatherChart').style.display = 'block';
+        if (window.weatherChart instanceof Chart) {
+            window.weatherChart.destroy();
+        }
+
+        window.weatherChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Rainfall', 'Min Temp', 'Max Temp', 'Min Humidity', 'Max Humidity', 'Min Wind Speed', 'Max Wind Speed'],
+                datasets: [{
+                    label: 'Weather Data',
+                    data: [rainfall, minTemp, maxTemp, minHumidity, maxHumidity, minWindSpeed, maxWindSpeed],
+                    backgroundColor: [
+                        '#2F80ED', '#56CCF2', '#FF6347', '#FFEB3B', '#FF9800', '#8E24AA', '#B0BEC5'
+                    ],
+                    borderColor: [
+                        '#2F80ED', '#56CCF2', '#FF6347', '#FFEB3B', '#FF9800', '#8E24AA', '#B0BEC5'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Value' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Weather Parameters' }
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
